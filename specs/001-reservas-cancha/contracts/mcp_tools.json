@@ -1,0 +1,118 @@
+{
+  "protocol_version": "2024-11-05",
+  "tools": [
+    {
+      "name": "crear_reserva",
+      "description": "Crea una nueva reserva en la cancha sintética para el usuario autenticado, validando disponibilidad y reglas de negocio.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "cancha": {
+            "type": "string",
+            "description": "Nombre de la cancha (por defecto 'Cancha Estrellas')",
+            "default": "Cancha Estrellas"
+          },
+          "fecha": {
+            "type": "string",
+            "description": "Fecha de la reserva en formato YYYY-MM-DD",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "hora_inicio": {
+            "type": "string",
+            "description": "Hora de inicio en formato HH:00 (horas en punto)",
+            "pattern": "^([01]\\d|2[0-3]):00$"
+          },
+          "hora_fin": {
+            "type": "string",
+            "description": "Hora de finalización en formato HH:00 (horas en punto)",
+            "pattern": "^([01]\\d|2[0-3]):00$"
+          }
+        },
+        "required": ["fecha", "hora_inicio", "hora_fin"]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "cancha": { "type": "string" },
+          "fecha": { "type": "string" },
+          "hora_inicio": { "type": "string" },
+          "hora_fin": { "type": "string" },
+          "usuario_id": { "type": "integer" },
+          "creado_en": { "type": "string" }
+        }
+      },
+      "errorFormat": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "description": "Mensaje de error controlado para el cliente MCP" }
+        },
+        "required": ["error"]
+      }
+    },
+    {
+      "name": "listar_reservas",
+      "description": "Obtiene la lista paginada de reservas pertenecientes al usuario autenticado.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skip": {
+            "type": "integer",
+            "description": "Número de registros a omitir para paginación",
+            "default": 0
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Número máximo de registros a retornar",
+            "default": 20
+          }
+        }
+      },
+      "returns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "cancha": { "type": "string" },
+            "fecha": { "type": "string" },
+            "hora_inicio": { "type": "string" },
+            "hora_fin": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "name": "cancelar_reserva",
+      "description": "Cancela y elimina una reserva existente verificando que pertenezca al usuario autenticado y con confirmación explícita.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reserva_id": {
+            "type": "integer",
+            "description": "Identificador único de la reserva a cancelar"
+          },
+          "confirmar": {
+            "type": "boolean",
+            "description": "Confirmación requerida del servidor/usuario para ejecutar la cancelación",
+            "default": true
+          }
+        },
+        "required": ["reserva_id"]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "mensaje": { "type": "string", "example": "Reserva 10 cancelada exitosamente" }
+        }
+      },
+      "errorFormat": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        },
+        "required": ["error"]
+      }
+    }
+  ]
+}

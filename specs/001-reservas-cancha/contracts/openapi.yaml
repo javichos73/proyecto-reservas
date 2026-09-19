@@ -1,0 +1,283 @@
+openapi: 3.1.0
+info:
+  title: Sistema de Reservas - Cancha Sintética "Estrellas"
+  version: 1.0.0
+  description: API REST para la gestión y reserva de turnos en cancha sintética con autenticación OAuth2 JWT y arquitectura en capas.
+paths:
+  /usuarios/:
+    post:
+      summary: Registro de nuevo usuario
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '400':
+          description: Correo electrónico ya registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Error de validación en los datos enviados
+
+  /usuarios/token:
+    post:
+      summary: Autenticación y obtención de token JWT
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OAuth2PasswordRequest'
+      responses:
+        '200':
+          description: Token de acceso JWT emitido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reservas/:
+    post:
+      summary: Crear una nueva reserva de cancha
+      tags:
+        - Reservas
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaCreate'
+      responses:
+        '201':
+          description: Reserva creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaResponse'
+        '400':
+          description: Conflicto de horario, solapamiento o duración inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autenticado o token inválido
+        '422':
+          description: Datos de solicitud no válidos
+
+    get:
+      summary: Listar reservas privadas del usuario autenticado
+      tags:
+        - Reservas
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista paginada de reservas del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservaResponse'
+        '401':
+          description: No autenticado o token inválido
+
+  /reservas/{id}:
+    delete:
+      summary: Cancelar y eliminar una reserva propia
+      tags:
+        - Reservas
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Reserva cancelada exitosamente (No Content)
+        '401':
+          description: No autenticado
+        '403':
+          description: Prohibido - el usuario no es propietario de esta reserva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Reserva no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /usuarios/token
+  schemas:
+    UsuarioCreate:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: usuario@ejemplo.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: secret123
+
+    UsuarioResponse:
+      type: object
+      required:
+        - id
+        - email
+        - creado_en
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: usuario@ejemplo.com
+        creado_en:
+          type: string
+          format: date-time
+
+    OAuth2PasswordRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: Email del usuario
+        password:
+          type: string
+
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: bearer
+
+    ReservaCreate:
+      type: object
+      required:
+        - fecha
+        - hora_inicio
+        - hora_fin
+      properties:
+        cancha:
+          type: string
+          default: Cancha Estrellas
+          example: Cancha Estrellas
+        fecha:
+          type: string
+          format: date
+          example: "2026-09-20"
+        hora_inicio:
+          type: string
+          pattern: '^([01]\d|2[0-3]):00$'
+          example: "18:00"
+        hora_fin:
+          type: string
+          pattern: '^([01]\d|2[0-3]):00$'
+          example: "19:00"
+
+    ReservaResponse:
+      type: object
+      required:
+        - id
+        - cancha
+        - fecha
+        - hora_inicio
+        - hora_fin
+        - usuario_id
+        - creado_en
+      properties:
+        id:
+          type: integer
+          example: 10
+        cancha:
+          type: string
+          example: Cancha Estrellas
+        fecha:
+          type: string
+          example: "2026-09-20"
+        hora_inicio:
+          type: string
+          example: "18:00"
+        hora_fin:
+          type: string
+          example: "19:00"
+        usuario_id:
+          type: integer
+          example: 1
+        creado_en:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          example: Conflicto de horario con otra reserva existente

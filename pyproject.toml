@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proyecto-reservas"
+version = "0.1.0"
+description = "Sistema de Reservas para Cancha Sintética Estrellas"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "sqlalchemy>=2.0.0",
+    "pyjwt>=2.9.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt<4.1.0",
+    "pydantic-settings>=2.4.0",
+    "email-validator>=2.2.0",
+    "python-multipart>=0.0.9",
+    "mcp[cli]<2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "httpx>=0.27.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/main.py",
+    "app/mcp/server.py",
+    "app/logging_config.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
