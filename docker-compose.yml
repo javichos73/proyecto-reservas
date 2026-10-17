@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend_reservas
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=Sistema de Reservas - Cancha Estrellas
+      - ENVIRONMENT=development
+      - SECRET_KEY=cambiar_este_secreto_en_produccion
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - DATABASE_URL=sqlite:///./reservas.db
+    restart: unless-stopped

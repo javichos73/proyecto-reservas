@@ -10,6 +10,12 @@ from app.mcp.tools.reserva_tools import (
 mcp = FastMCP("reservas-cancha-sintetica")
 mcp_server = mcp  # Alias de compatibilidad
 
+# Instancia ASGI para montaje en FastAPI (/mcp)
+try:
+    mcp_app = mcp.sse_app(mount_path="/mcp")
+except Exception:
+    mcp_app = None
+
 
 @mcp.tool(
     name="crear_reserva",
